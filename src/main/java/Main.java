@@ -23,8 +23,14 @@ public class Main {
       String[] requestParts = clientRequest.split(" ");
       String path = requestParts[1];
       String messageToClient = "";
-      if (path.equals("/")) {
-        messageToClient = "HTTP/1.1 200 OK\r\n\r\n";
+      if (path.startsWith("/echo/")) {
+        String messageToEcho = path.substring("/echo/".length());
+        messageToClient = String.format(
+                        "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: text/plain\r\n"+
+                        "Content-length %d\r\n\r\n" +
+                                "%s\r\n",
+                        messageToEcho.length(), messageToEcho);
       } else {
         messageToClient = "HTTP/1.1 404 Not Found\r\n\r\n";
       }
