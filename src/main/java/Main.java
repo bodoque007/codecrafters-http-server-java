@@ -17,8 +17,17 @@ public class Main {
       System.out.println("accepted new connection");
       DataOutputStream clientOutput = new DataOutputStream(clientSocket.getOutputStream());
       BufferedReader data = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-      String message = data.readLine();
-      String messageToClient = "HTTP/1.1 200 OK\r\n\r\n";
+
+      String clientRequest = data.readLine();
+
+      String[] requestParts = clientRequest.split(" ");
+      String path = requestParts[1];
+      String messageToClient = "";
+      if (path.equals("/")) {
+        messageToClient = "HTTP/1.1 200 OK\r\n\r\n";
+      } else {
+        messageToClient = "HTTP/1.1 404 Not Found\r\n\r\n";
+      }
       clientOutput.writeBytes(messageToClient);
       clientOutput.flush();
     } catch (IOException e) {
