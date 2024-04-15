@@ -18,7 +18,7 @@ public class Main {
       DataOutputStream clientOutput = new DataOutputStream(clientSocket.getOutputStream());
       BufferedReader data = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
       String message = data.readLine();
-      String messageToClient = "HTTP/1.1 200 OK\\r\\n\\r\\n";
+      String messageToClient = "HTTP/1.1 200 OK\r\n\r\n";
       clientOutput.writeUTF(messageToClient);
       clientOutput.flush();
     } catch (IOException e) {
