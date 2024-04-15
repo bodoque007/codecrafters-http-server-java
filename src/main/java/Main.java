@@ -20,10 +20,21 @@ public class Main {
 
       String clientRequest = data.readLine();
 
-      String[] requestParts = clientRequest.split(" ");
-      String path = requestParts[1];
-      String messageToClient = "";
-      if (path.startsWith("/echo/")) {
+      String messageToClient = getString(clientRequest);
+      clientOutput.writeBytes(messageToClient);
+      clientOutput.flush();
+    } catch (IOException e) {
+      System.out.println("IOException: " + e.getMessage());
+    }
+  }
+
+  private static String getString(String clientRequest) {
+    String[] requestParts = clientRequest.split(" ");
+    String path = requestParts[1];
+    String messageToClient = "";
+    if (path.equals("/")) {
+      messageToClient = "HTTP/1.1 200 OK\r\n";
+    } else if (path.startsWith("/echo/")) {
         String messageToEcho = path.substring("/echo/".length());
         messageToClient = String.format(
                         "HTTP/1.1 200 OK\r\n" +
@@ -31,13 +42,9 @@ public class Main {
                         "Content-length %d\r\n\r\n" +
                                 "%s\r\n",
                         messageToEcho.length(), messageToEcho);
-      } else {
+    } else {
         messageToClient = "HTTP/1.1 404 Not Found\r\n\r\n";
-      }
-      clientOutput.writeBytes(messageToClient);
-      clientOutput.flush();
-    } catch (IOException e) {
-      System.out.println("IOException: " + e.getMessage());
     }
+    return messageToClient;
   }
 }
