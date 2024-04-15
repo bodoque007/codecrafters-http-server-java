@@ -19,7 +19,7 @@ public class Main {
       BufferedReader data = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
       String message = data.readLine();
       String messageToClient = "HTTP/1.1 200 OK\r\n\r\n";
-      clientOutput.writeUTF(messageToClient);
+      clientOutput.writeBytes(messageToClient);
       clientOutput.flush();
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
