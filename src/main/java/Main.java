@@ -39,7 +39,7 @@ public class Main {
         messageToClient = String.format(
                         "HTTP/1.1 200 OK\r\n" +
                         "Content-Type: text/plain\r\n"+
-                        "Content-length %d\r\n" +
+                        "Content-length: %d\r\n" +
                                 "%s\r\n\r\n",
                         messageToEcho.length(), messageToEcho);
     } else {
