@@ -88,10 +88,10 @@ class ClientHandler implements Runnable {
         String[] parts = line.split(":");
         userAgent = parts[1].trim();
       }
+      System.out.println(line);
       requestLines.add(line);
     }
     for (String requestLine : requestLines) {
-      System.out.printf("R %s%n", requestLine);
       if (requestLine.startsWith("POST")) {
         String[] requestParts = requestLine.split(" ");
         String path = requestParts[1];
@@ -103,8 +103,8 @@ class ClientHandler implements Runnable {
             System.out.println(requestLines.get(i));
             fileContentBuilder.append(requestLines.get(i)).append(System.lineSeparator());
           }
-          System.out.println("FIle content:");
           String fileContent = fileContentBuilder.toString();
+          System.out.println("file content:");
           System.out.println(fileContent);
           Path filePath = Paths.get(directory, fileName);
           saveFile(filePath, fileContent);
