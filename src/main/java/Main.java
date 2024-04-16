@@ -68,6 +68,15 @@ class ClientHandler implements Runnable {
       System.out.println("IOException: " + e.getMessage());
     }
   }
+  private void saveFile(Path filePath, String fileContent) {
+    // Save the file content to the file path
+    try {
+      Files.write(filePath, fileContent.getBytes());
+      System.out.println("File saved successfully to: " + filePath.toString());
+    } catch (IOException e) {
+      System.err.println("Failed to save file: " + e.getMessage());
+    }
+  }
   private String getString(BufferedReader clientRequest) throws IOException {
     String line;
     List<String> requestLines = new ArrayList<>();
@@ -82,6 +91,22 @@ class ClientHandler implements Runnable {
       requestLines.add(line);
     }
     for (String requestLine : requestLines) {
+      if (requestLine.startsWith("POST")) {
+        String[] requestParts = requestLine.split(" ");
+        String path = requestParts[1];
+        if (path.startsWith("/files/")) {
+          String fileName = path.substring("/files/".length());
+
+          StringBuilder fileContentBuilder = new StringBuilder();
+          for (int i = 1; i < requestLines.size(); i++) {
+            fileContentBuilder.append(requestLines.get(i)).append(System.lineSeparator());
+          }
+          String fileContent = fileContentBuilder.toString();
+          Path filePath = Paths.get(directory, fileName);
+          saveFile(filePath, fileContent);
+          messageToClient = "HTTP/1.1 201 Created\r\n\r\n";
+        }
+      }
       if (requestLine.startsWith("GET")) {
         String[] requestParts = requestLine.split(" ");
         String path = requestParts[1];
