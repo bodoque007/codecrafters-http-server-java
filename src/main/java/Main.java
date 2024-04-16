@@ -13,6 +13,16 @@ import java.util.Objects;
 
 public class Main {
   public static void main(String[] args) {
+    String directory = null;
+
+    // Iterate through the command line arguments to find the --directory flag
+    for (int i = 0; i < args.length; i++) {
+      if (args[i].equals("--directory") && i + 1 < args.length) {
+        // The directory value is the argument following the --directory flag
+        directory = args[i + 1];
+        break; // Stop searching once we find the flag
+      }
+    }
     ServerSocket serverSocket = null;
     Socket clientSocket = null;
 
@@ -22,7 +32,7 @@ public class Main {
       while (true) {
         clientSocket = serverSocket.accept(); // Wait for connection from client.
         System.out.println("accepted new connection");
-        Thread clientHandler = new Thread(new ClientHandler(clientSocket));
+        Thread clientHandler = new Thread(new ClientHandler(clientSocket, directory));
         clientHandler.start();
       }
     } catch (IOException e) {
@@ -33,9 +43,11 @@ public class Main {
 
 class ClientHandler implements Runnable {
   private final Socket clientSocket;
+  private final String directory;
 
-  public ClientHandler(Socket clientSocket) {
+  public ClientHandler(Socket clientSocket, String directory) {
     this.clientSocket = clientSocket;
+    this.directory = directory;
   }
 
   @Override
@@ -92,8 +104,7 @@ class ClientHandler implements Runnable {
                     userAgent.length(), userAgent);
         } else if (path.startsWith("/files/")) {
             String fileName = path.substring("/files/".length());
-            String directoryName = "/tmp/codecrafters-http-target";
-            Path filePath = Paths.get(directoryName, fileName);
+            Path filePath = Paths.get(directory, fileName);
             try {
               if (Files.exists(filePath)) {
                 String contents = Files.readString(filePath);
