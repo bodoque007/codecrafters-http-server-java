@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Main {
   public static void main(String[] args) {
@@ -80,17 +84,38 @@ class ClientHandler implements Runnable {
                           "%s\r\n",
                   messageToEcho.length(), messageToEcho);
         } else if (path.equals("/user-agent")) {
-          messageToClient = String.format(
-                  "HTTP/1.1 200 OK\r\n" +
-                          "Content-Type: text/plain\r\n"+
-                          "Content-Length: %d\r\n\r\n" +
-                          "%s\r\n",
-                  userAgent.length(), userAgent);
+            messageToClient = String.format(
+                    "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: text/plain\r\n"+
+                            "Content-Length: %d\r\n\r\n" +
+                            "%s\r\n",
+                    userAgent.length(), userAgent);
+        } else if (path.startsWith("/files/")) {
+            String fileName = path.substring("/files/".length());
+            String directoryName = "/tmp/codecrafters-http-target";
+            Path filePath = Paths.get(directoryName, fileName);
+            try {
+              if (Files.exists(filePath)) {
+                String contents = Files.readString(filePath);
+                System.out.println(contents);
+                messageToClient = String.format(
+                        "HTTP/1.1 200 OK\r\n" +
+                                "Content-Type: application/octet-stream\r\n"+
+                                "Content-Length: %d\r\n\r\n" +
+                                "%s\r\n",
+                        contents.length(), contents);
+              }
+            } catch (IOException e) {
+              System.out.println("Error reading file:" + e.getMessage());
+            }
         }
         else {
           messageToClient = "HTTP/1.1 404 Not Found\r\n\r\n";
         }
       }
+    }
+    if (messageToClient.isEmpty()) {
+      messageToClient = "HTTP/1.1 404 Not Found\r\n\r\n";
     }
     return messageToClient;
   }
