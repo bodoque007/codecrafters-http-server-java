@@ -91,6 +91,7 @@ class ClientHandler implements Runnable {
       requestLines.add(line);
     }
     for (String requestLine : requestLines) {
+      System.out.printf("R %s%n", requestLine);
       if (requestLine.startsWith("POST")) {
         String[] requestParts = requestLine.split(" ");
         String path = requestParts[1];
