@@ -99,9 +99,12 @@ class ClientHandler implements Runnable {
 
           StringBuilder fileContentBuilder = new StringBuilder();
           for (int i = 1; i < requestLines.size(); i++) {
+            System.out.println(requestLines.get(i));
             fileContentBuilder.append(requestLines.get(i)).append(System.lineSeparator());
           }
+          System.out.println("FIle content:");
           String fileContent = fileContentBuilder.toString();
+          System.out.println(fileContent);
           Path filePath = Paths.get(directory, fileName);
           saveFile(filePath, fileContent);
           messageToClient = "HTTP/1.1 201 Created\r\n\r\n";
