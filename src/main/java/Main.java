@@ -99,7 +99,7 @@ class ClientHandler implements Runnable {
           String fileName = path.substring("/files/".length());
 
           StringBuilder fileContentBuilder = new StringBuilder();
-          for (int i = 1; i < requestLines.size(); i++) {
+          for (int i = 5; i < requestLines.size(); i++) {
             System.out.println(requestLines.get(i));
             fileContentBuilder.append(requestLines.get(i)).append(System.lineSeparator());
           }
