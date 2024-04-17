@@ -83,6 +83,7 @@ class ClientHandler implements Runnable {
     List<String> requestLines = new ArrayList<>();
     int contentLength = 0;
     String line;
+    directory = "/tmp";
     while ((line = clientRequest.readLine()) != null && !line.isEmpty()) {
       requestLines.add(line);
       // Check for User-Agent header
@@ -92,6 +93,7 @@ class ClientHandler implements Runnable {
       } else if (line.startsWith("Content-Length:")) {
         String[]parts = line.split(":");
         contentLength = Integer.parseInt(parts[1].trim());
+        System.out.println(contentLength);
       }
     }
     // Process requestLines as needed
@@ -107,14 +109,8 @@ class ClientHandler implements Runnable {
           String requestBody = new String(bodyContent, 0, bytesRead);
           System.out.println(requestBody);
           String fileName = path.substring("/files/".length());
-          StringBuilder fileContentBuilder = new StringBuilder();
-          char[] buffer = new char[1024];
-          while ((bytesRead = clientRequest.read(buffer)) != -1) {
-            fileContentBuilder.append(buffer, 0, bytesRead);
-          }
-          String fileContent = fileContentBuilder.toString();
           Path filePath = Paths.get(directory, fileName);
-          saveFile(filePath, fileContent);
+          saveFile(filePath, requestBody);
           messageToClient = "HTTP/1.1 201 Created\r\n\r\n";
         }
       }
