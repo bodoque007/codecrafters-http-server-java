@@ -83,7 +83,6 @@ class ClientHandler implements Runnable {
     List<String> requestLines = new ArrayList<>();
     int contentLength = 0;
     String line;
-    directory = "/tmp";
     while ((line = clientRequest.readLine()) != null && !line.isEmpty()) {
       requestLines.add(line);
       // Check for User-Agent header
