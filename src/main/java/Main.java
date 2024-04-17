@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Main {
   public static void main(String[] args) {
@@ -80,7 +79,7 @@ class ClientHandler implements Runnable {
   private String getString(BufferedReader clientRequest) throws IOException {
     String userAgent = null;
     String messageToClient = "";
-    List<String> requestLines = new ArrayList<>();
+    List < String > requestLines = new ArrayList < > ();
     int contentLength = 0;
     String line;
     while ((line = clientRequest.readLine()) != null && !line.isEmpty()) {
@@ -90,11 +89,11 @@ class ClientHandler implements Runnable {
         String[] parts = line.split(":");
         userAgent = parts[1].trim();
       } else if (line.startsWith("Content-Length:")) {
-        String[]parts = line.split(":");
+        String[] parts = line.split(":");
         contentLength = Integer.parseInt(parts[1].trim());
       }
     }
-    for (String requestLine : requestLines) {
+    for (String requestLine: requestLines) {
       if (requestLine.startsWith("POST")) {
         String[] requestParts = requestLine.split(" ");
         String path = requestParts[1];
@@ -111,29 +110,28 @@ class ClientHandler implements Runnable {
           saveFile(filePath, requestBody);
           messageToClient = "HTTP/1.1 201 Created\r\n\r\n";
         }
-      }
-      else if (requestLine.startsWith("GET")) {
+      } else if (requestLine.startsWith("GET")) {
         String[] requestParts = requestLine.split(" ");
         String path = requestParts[1];
         if (path.equals("/")) {
           messageToClient = "HTTP/1.1 200 OK\r\n\r\n";
         } else if (path.startsWith("/echo/")) {
           String messageToEcho = path.substring("/echo/".length());
-          messageToClient = buildGetResponse(messageToEcho.length(), messageToEcho, "text/plain" );
+          messageToClient = buildGetResponse(messageToEcho.length(), messageToEcho, "text/plain");
         } else if (path.equals("/user-agent")) {
-            messageToClient = buildGetResponse(userAgent.length(), userAgent, "text/plain");
+          messageToClient = buildGetResponse(userAgent.length(), userAgent, "text/plain");
         } else if (path.startsWith("/files/")) {
-            String fileName = path.substring("/files/".length());
-            Path filePath = Paths.get(directory, fileName);
-            try {
-              if (Files.exists(filePath)) {
-                String contents = Files.readString(filePath);
-                System.out.println(contents);
-                messageToClient = buildGetResponse(contents.length(), contents, "application/octet-stream");
-              }
-            } catch (IOException e) {
-              System.out.println("Error reading file:" + e.getMessage());
+          String fileName = path.substring("/files/".length());
+          Path filePath = Paths.get(directory, fileName);
+          try {
+            if (Files.exists(filePath)) {
+              String contents = Files.readString(filePath);
+              System.out.println(contents);
+              messageToClient = buildGetResponse(contents.length(), contents, "application/octet-stream");
             }
+          } catch (IOException e) {
+            System.out.println("Error reading file:" + e.getMessage());
+          }
         }
       }
     }
@@ -145,7 +143,7 @@ class ClientHandler implements Runnable {
   private String buildGetResponse(int length, String content, String contentType) {
     return String.format(
             "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: %s\r\n"+
+                    "Content-Type: %s\r\n" +
                     "Content-Length: %d\r\n\r\n" +
                     "%s\r\n",
             contentType, length, content);
