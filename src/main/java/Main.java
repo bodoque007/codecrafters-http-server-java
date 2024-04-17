@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Main {
   public static void main(String[] args) {
@@ -43,7 +43,7 @@ public class Main {
 
 class ClientHandler implements Runnable {
   private final Socket clientSocket;
-  private final String directory;
+  private String directory;
 
   public ClientHandler(Socket clientSocket, String directory) {
     this.clientSocket = clientSocket;
@@ -78,34 +78,42 @@ class ClientHandler implements Runnable {
     }
   }
   private String getString(BufferedReader clientRequest) throws IOException {
-    String line;
-    List<String> requestLines = new ArrayList<>();
     String userAgent = null;
     String messageToClient = "";
-
-    while ((line = clientRequest.readLine()) != null && !line.isEmpty()){
+    List<String> requestLines = new ArrayList<>();
+    int contentLength = 0;
+    String line;
+    directory = "/tmp";
+    while ((line = clientRequest.readLine()) != null && !line.isEmpty()) {
+      requestLines.add(line);
+      // Check for User-Agent header
       if (line.startsWith("User-Agent:")) {
         String[] parts = line.split(":");
         userAgent = parts[1].trim();
+      } else if (line.startsWith("Content-Length:")) {
+        String[]parts = line.split(":");
+        contentLength = Integer.parseInt(parts[1].trim());
       }
-      System.out.println(line);
-      requestLines.add(line);
     }
+    // Process requestLines as needed
+    // The remaining code for processing requestLines goes here...
     for (String requestLine : requestLines) {
       if (requestLine.startsWith("POST")) {
         String[] requestParts = requestLine.split(" ");
         String path = requestParts[1];
         if (path.startsWith("/files/")) {
+          // Read the body separately (if there is any)
+          char[] bodyContent = new char[contentLength];
+          int bytesRead = clientRequest.read(bodyContent, 0, contentLength);
+          String requestBody = new String(bodyContent, 0, bytesRead);
+          System.out.println(requestBody);
           String fileName = path.substring("/files/".length());
-
           StringBuilder fileContentBuilder = new StringBuilder();
-          for (int i = 5; i < requestLines.size(); i++) {
-            System.out.println(requestLines.get(i));
-            fileContentBuilder.append(requestLines.get(i)).append(System.lineSeparator());
+          char[] buffer = new char[1024];
+          while ((bytesRead = clientRequest.read(buffer)) != -1) {
+            fileContentBuilder.append(buffer, 0, bytesRead);
           }
           String fileContent = fileContentBuilder.toString();
-          System.out.println("file content:");
-          System.out.println(fileContent);
           Path filePath = Paths.get(directory, fileName);
           saveFile(filePath, fileContent);
           messageToClient = "HTTP/1.1 201 Created\r\n\r\n";
