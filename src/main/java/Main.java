@@ -9,12 +9,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Main {
   public static void main(String[] args) {
     String directory = null;
-
     // Iterate through the command line arguments to find the --directory flag
     for (int i = 0; i < args.length; i++) {
       if (args[i].equals("--directory") && i + 1 < args.length) {
@@ -29,6 +27,7 @@ public class Main {
     try {
       serverSocket = new ServerSocket(4221);
       serverSocket.setReuseAddress(true);
+      // Await for connections.
       while (true) {
         clientSocket = serverSocket.accept(); // Wait for connection from client.
         System.out.println("accepted new connection");
@@ -43,7 +42,7 @@ public class Main {
 
 class ClientHandler implements Runnable {
   private final Socket clientSocket;
-  private String directory;
+  private final String directory;
 
   public ClientHandler(Socket clientSocket, String directory) {
     this.clientSocket = clientSocket;
@@ -90,13 +89,11 @@ class ClientHandler implements Runnable {
         String[] parts = line.split(":");
         userAgent = parts[1].trim();
       } else if (line.startsWith("Content-Length:")) {
+        // Check for body's content length if this is a post request.
         String[]parts = line.split(":");
         contentLength = Integer.parseInt(parts[1].trim());
-        System.out.println(contentLength);
       }
     }
-    // Process requestLines as needed
-    // The remaining code for processing requestLines goes here...
     for (String requestLine : requestLines) {
       if (requestLine.startsWith("POST")) {
         String[] requestParts = requestLine.split(" ");
@@ -112,47 +109,28 @@ class ClientHandler implements Runnable {
           saveFile(filePath, requestBody);
           messageToClient = "HTTP/1.1 201 Created\r\n\r\n";
         }
-      }
-      if (requestLine.startsWith("GET")) {
+      } else if (requestLine.startsWith("GET")) {
         String[] requestParts = requestLine.split(" ");
         String path = requestParts[1];
         if (path.equals("/")) {
           messageToClient = "HTTP/1.1 200 OK\r\n\r\n";
         } else if (path.startsWith("/echo/")) {
           String messageToEcho = path.substring("/echo/".length());
-          messageToClient = String.format(
-                  "HTTP/1.1 200 OK\r\n" +
-                          "Content-Type: text/plain\r\n"+
-                          "Content-Length: %d\r\n\r\n" +
-                          "%s\r\n",
-                  messageToEcho.length(), messageToEcho);
+          messageToClient = buildGETResponse(messageToEcho.length(), messageToEcho);
         } else if (path.equals("/user-agent")) {
-            messageToClient = String.format(
-                    "HTTP/1.1 200 OK\r\n" +
-                            "Content-Type: text/plain\r\n"+
-                            "Content-Length: %d\r\n\r\n" +
-                            "%s\r\n",
-                    userAgent.length(), userAgent);
+          messageToClient = buildGETResponse(userAgent.length(), userAgent);
         } else if (path.startsWith("/files/")) {
-            String fileName = path.substring("/files/".length());
-            Path filePath = Paths.get(directory, fileName);
-            try {
-              if (Files.exists(filePath)) {
-                String contents = Files.readString(filePath);
-                System.out.println(contents);
-                messageToClient = String.format(
-                        "HTTP/1.1 200 OK\r\n" +
-                                "Content-Type: application/octet-stream\r\n"+
-                                "Content-Length: %d\r\n\r\n" +
-                                "%s\r\n",
-                        contents.length(), contents);
-              }
-            } catch (IOException e) {
-              System.out.println("Error reading file:" + e.getMessage());
+          String fileName = path.substring("/files/".length());
+          Path filePath = Paths.get(directory, fileName);
+          try {
+            if (Files.exists(filePath)) {
+              String contents = Files.readString(filePath);
+              System.out.println(contents);
+              messageToClient = buildGETResponse(contents.length(), contents);
             }
-        }
-        else {
-          messageToClient = "HTTP/1.1 404 Not Found\r\n\r\n";
+          } catch (IOException e) {
+            System.out.println("Error reading file:" + e.getMessage());
+          }
         }
       }
     }
@@ -160,5 +138,13 @@ class ClientHandler implements Runnable {
       messageToClient = "HTTP/1.1 404 Not Found\r\n\r\n";
     }
     return messageToClient;
+  }
+  String buildGETResponse(int length, String message) {
+    return String.format(
+            "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: application/octet-stream\r\n"+
+                    "Content-Length: %d\r\n\r\n" +
+                    "%s\r\n",
+            length, message);
   }
 }
