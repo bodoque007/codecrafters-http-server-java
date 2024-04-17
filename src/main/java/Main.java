@@ -12,7 +12,7 @@ import java.util.List;
 
 public class Main {
   public static void main(String[] args) {
-    String directory = null;
+    String directory = "/tmp";
 
     // Iterate through the command line arguments to find the --directory flag
     for (int i = 0; i < args.length; i++) {
